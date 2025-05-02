@@ -5,6 +5,7 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from smolq.queue.models import *
 
+
 @pytest.fixture
 def setup_db():
     """Setup an in-memory SQLite database for testing"""
@@ -19,10 +20,7 @@ class TestPydanticModels:
     def test_queue_properties(self):
         """Test QueueProperties model creation and validation"""
         queue_props = QueueProperties(
-            name="test_queue",
-            rate_limit=10.5,
-            max_retries=3,
-            visibility_timeout=60
+            name="test_queue", rate_limit=10.5, max_retries=3, visibility_timeout=60
         )
 
         assert queue_props.name == "test_queue"
@@ -36,7 +34,7 @@ class TestPydanticModels:
                 name="test_queue",
                 rate_limit="invalid",  # Should be float
                 max_retries=3,
-                visibility_timeout=60
+                visibility_timeout=60,
             )
 
     def test_actual_message(self):
@@ -50,7 +48,7 @@ class TestPydanticModels:
             "tries": 1,
             "max_tries": 5,
             "message": b"test message content",
-            "KV": {"key1": "value1", "key2": "value2"}
+            "KV": {"key1": "value1", "key2": "value2"},
         }
 
         message = ActualMessage(**message_data)
@@ -83,7 +81,7 @@ class TestSQLModels:
             name="test_queue",
             rate_limit=15.0,
             max_retry=3,
-            visibility_timeout=60
+            visibility_timeout=60,
         )
 
         with Session(engine) as session:
@@ -123,7 +121,7 @@ class TestSQLModels:
             delivered_at=int(datetime.now().timestamp()) + 30,
             tries=0,
             max_tries=3,
-            message="Hello, world!"
+            message="Hello, world!",
         )
 
         with Session(engine) as session:
@@ -158,25 +156,13 @@ class TestSQLModels:
             delivered_at=int(datetime.now().timestamp()) + 30,
             tries=0,
             max_tries=3,
-            message="Hello, world!"
+            message="Hello, world!",
         )
 
         # Create KV pairs for the message
-        kv1 = KV(
-            tenant_id=1,
-            queue_id=1,
-            message_id=1,
-            K="priority",
-            V="high"
-        )
+        kv1 = KV(tenant_id=1, queue_id=1, message_id=1, K="priority", V="high")
 
-        kv2 = KV(
-            tenant_id=1,
-            queue_id=1,
-            message_id=1,
-            K="source",
-            V="test"
-        )
+        kv2 = KV(tenant_id=1, queue_id=1, message_id=1, K="source", V="test")
 
         with Session(engine) as session:
             session.add(message)
@@ -207,10 +193,7 @@ class TestSQLModels:
         engine = setup_db
 
         rate_limit = RateLimit(
-            tenant_id=1,
-            queue_id=1,
-            ts=int(datetime.now().timestamp()),
-            n=5
+            tenant_id=1, queue_id=1, ts=int(datetime.now().timestamp()), n=5
         )
 
         with Session(engine) as session:
@@ -240,7 +223,7 @@ class TestSQLModels:
 class TestMessageConversion:
     """Test cases for message conversion methods"""
 
-    @patch('models.Session')
+    @patch("models.Session")
     def test_message_to_model(self, mock_session):
         """Test Message.to_model conversion method"""
         # Setup the message
@@ -252,7 +235,7 @@ class TestMessageConversion:
             delivered_at=200,
             tries=1,
             max_tries=3,
-            message="Test message"
+            message="Test message",
         )
 
         # Mock the session and query results
@@ -296,24 +279,12 @@ class TestMessageConversion:
             delivered_at=400,
             tries=2,
             max_tries=4,
-            message="Integration test message"
+            message="Integration test message",
         )
 
-        kv1 = KV(
-            tenant_id=2,
-            queue_id=2,
-            message_id=2,
-            K="test_key1",
-            V="test_value1"
-        )
+        kv1 = KV(tenant_id=2, queue_id=2, message_id=2, K="test_key1", V="test_value1")
 
-        kv2 = KV(
-            tenant_id=2,
-            queue_id=2,
-            message_id=2,
-            K="test_key2",
-            V="test_value2"
-        )
+        kv2 = KV(tenant_id=2, queue_id=2, message_id=2, K="test_key2", V="test_value2")
 
         with Session(engine) as session:
             session.add(message)
@@ -325,14 +296,16 @@ class TestMessageConversion:
 
             # Now test the to_model method with a real session
             # We need to patch the Message class temporarily to use our session object
-            with patch.object(Message, 'message_id', 2), \
-                    patch.object(Message, 'tenant_id', 2), \
-                    patch.object(Message, 'queue_id', 2), \
-                    patch.object(Message, 'deliver_at', 300), \
-                    patch.object(Message, 'delivered_at', 400), \
-                    patch.object(Message, 'tries', 2), \
-                    patch.object(Message, 'max_tries', 4), \
-                    patch.object(Message, 'message', "Integration test message"):
+            with (
+                patch.object(Message, "message_id", 2),
+                patch.object(Message, "tenant_id", 2),
+                patch.object(Message, "queue_id", 2),
+                patch.object(Message, "deliver_at", 300),
+                patch.object(Message, "delivered_at", 400),
+                patch.object(Message, "tries", 2),
+                patch.object(Message, "max_tries", 4),
+                patch.object(Message, "message", "Integration test message"),
+            ):
                 actual_message = Message.to_model(engine)
 
                 # Verify the result
@@ -345,4 +318,7 @@ class TestMessageConversion:
                 assert actual_message.tries == 2
                 assert actual_message.max_tries == 4
                 assert actual_message.message == b"Integration test message"
-                assert actual_message.KV == {"test_key1": "test_value1", "test_key2": "test_value2"}
+                assert actual_message.KV == {
+                    "test_key1": "test_value1",
+                    "test_key2": "test_value2",
+                }
