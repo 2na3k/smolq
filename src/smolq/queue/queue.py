@@ -7,15 +7,6 @@ from sqlmodel import Session, select, create_engine, or_, delete, update
 from smolq.queue.models import *
 
 
-class QueueConfig:
-    PATH: str = "sqlite:///smolq.db"
-    CONFIG_STRING: str = "?_journal_mode=WAL&_foreign_keys=off&_auto_vacuum=full"
-
-    @classmethod
-    def get_connection_string(cls) -> str:
-        return cls.PATH + cls.CONFIG_STRING
-
-
 class QueueManager:
     def __init__(self, config: QueueConfig):
         self.config = config

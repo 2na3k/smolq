@@ -21,6 +21,15 @@ class QueueProperties(BaseModel):
     visibility_timeout: int
 
 
+class QueueConfig(BaseModel):
+    path: str = "sqlite:///smolq.db"
+    config_string = "?_journal_mode=WAL&_foreign_keys=off&_auto_vacuum=full"
+
+    @classmethod
+    def get_connection_string(cls) -> str:
+        return cls.path + cls.config_string
+
+
 class ActualMessage(BaseModel):
     """
     Will be used in the external modules to parse the message.
